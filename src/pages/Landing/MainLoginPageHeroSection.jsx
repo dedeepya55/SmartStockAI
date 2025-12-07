@@ -1,6 +1,7 @@
 import React from "react";
 import "./LandingCSS/MainLoginPageHeroSection.css";
-import heroImage from "../../assets/LandingPageImage1.jpeg"; // replace with your image
+import heroImage from "../../assets/LandingPageImage1.jpeg"; 
+import { Link } from "react-router-dom";
 
 const MainLoginPageHeroSection = () => {
   return (
@@ -15,7 +16,7 @@ const MainLoginPageHeroSection = () => {
           data-driven trading decisions with ease.
         </p>
 
-        <button className="hero-btn">Get Started</button>
+        <Link to="/login" className="hero-btn">Get Started</Link>
 
       </div>
 

@@ -5,6 +5,7 @@ import image2 from "../../assets/LandingPageImage2.jpg";
 import image3 from "../../assets/LandingPageImage4.jpg";
 import image4 from "../../assets/LandingPageImage5.jpg";
 import image5 from "../../assets/LandingPageImage6.jpg";
+import { Link } from "react-router-dom";
 
 
 const featuresData = [
@@ -51,7 +52,7 @@ const MainLoginPageFeaturesSection = () => {
           new events and generating a complete report, all just one line of
           code. No more manual work needed, let our technology take over.
         </p>
-        <button className="get-started-btn">Get Started</button>
+        <Link to="/login" className="get-started-btn">Get Started</Link>
       </div>
 
       <div className="features-grid">

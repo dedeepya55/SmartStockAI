@@ -23,21 +23,24 @@
   color: #555;
   max-width: 480px;
 }
-
 .hero-btn {
   margin-top: 25px;
   background-color: #253d6f;
-  color: white;
+  color: white !important;
   padding: 14px 28px;
   border-radius: 8px;
   border: none;
-  font-size: 16px;
+  font-size: 20px;
   cursor: pointer;
   font-weight: 600;
   transition: 0.3s;
+  text-decoration: none;        /* FIX: remove underline */
+  display: inline-block;        /* FIX: padding works correctly */
 }
 
-
+.hero-btn:hover {
+  background-color: #1b2f59;
+}
 
 .hero-users {
   display: flex;
