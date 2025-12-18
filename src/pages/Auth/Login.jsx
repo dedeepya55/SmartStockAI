@@ -1,9 +1,12 @@
 import { useState } from "react";
-import styles from "./Login.module.css"; 
+import { useNavigate } from "react-router-dom";
+import styles from "./Login.module.css";
 import LoginImage from "../../assets/LoginImage.png";
 import { loginUser } from "../../api/api";
 
 const Login = () => {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,16 +25,13 @@ const Login = () => {
     try {
       const response = await loginUser({ email, password });
 
-      // ✅ Show alert on successful login
       alert(response.data.message || "Login successful!");
 
-      console.log("Login successful:", response.data);
-
-      // Optionally save token to localStorage
+      // Save token
       localStorage.setItem("token", response.data.token);
 
-      // Optionally redirect user
-      // window.location.href = "/dashboard";
+      // ✅ Redirect to dashboard
+      navigate("/dashboard");
 
     } catch (err) {
       console.error(err);
@@ -43,7 +43,12 @@ const Login = () => {
 
   return (
     <div className={styles.loginContainer}>
-      <img src={LoginImage} alt="SmartVision AI" className={styles.backgroundImage} />
+      <img
+        src={LoginImage}
+        alt="SmartVision AI"
+        className={styles.backgroundImage}
+      />
+
       <div className={styles.pattern}></div>
 
       <div className={styles.rightSide}>
@@ -73,13 +78,10 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
               <span
-                className={`${styles.eyeIcon} ${showPassword ? styles.eyeIconActive : ""}`}
+                className={styles.eyeIcon}
                 onClick={() => setShowPassword(!showPassword)}
               >
-                <div className={styles.eye}>
-                  <div className={styles.pupil}></div>
-                </div>
-                <div className={styles.slash}></div>
+                👁
               </span>
             </div>
           </div>
@@ -88,7 +90,12 @@ const Login = () => {
             <label>
               <input type="checkbox" /> Remember me
             </label>
-            <button className={styles.forgot} onClick={() => window.location.href = "/forgot-password"}>Forgot password?</button>
+            <button
+              className={styles.forgot}
+              onClick={() => navigate("/forgot-password")}
+            >
+              Forgot password?
+            </button>
           </div>
 
           <button
