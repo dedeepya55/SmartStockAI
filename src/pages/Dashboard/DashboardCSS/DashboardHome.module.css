@@ -13,7 +13,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-}
+} 
 
 .actions {
   display: flex;
@@ -54,9 +54,9 @@
   z-index: 10;
   max-height: 200px;
   overflow-y: auto;
-  padding: 0;  /* remove extra padding */
-  margin: 0;   /* remove default list margin */
-  list-style: none;  /* remove bullets */
+  padding: 0; 
+  margin: 0; 
+  list-style: none; 
 }
 
 .dropdown li {
@@ -143,3 +143,32 @@ td img {
   padding: 6px 8px;
   color: #777;
 }
+
+.stock {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.InStock {
+  background: #e6f7ee;
+  color: #1f9254;
+}
+
+.LowStock {
+  background: #fff4e5;
+  color: #b26a00;
+}
+
+.OutofStock {
+  background: #fdecea;
+  color: #d93025;
+}
+
+.OverStock {
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+
+

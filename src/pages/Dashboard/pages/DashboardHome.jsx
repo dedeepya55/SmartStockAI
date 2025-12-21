@@ -1,128 +1,140 @@
 import { useState, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
 import { getProducts } from "../../../api/api";
 import styles from "../DashboardCSS/DashboardHome.module.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
 
 const DashboardHome = () => {
+  /* 🔍 SEARCH FROM TOPBAR */
+  const { search = "" } = useOutletContext();
+
+  /* DATA */
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const categoryOptions = [
-    "All",
-    "Food Staples",
-    "Beverages",
-    "Dairy",
-    "Bakery",
-    "Snacks",
-    "Personal Care",
-    "Household",
-    "Kitchen"
-  ];
-  const statusOptions = ["All", "In Stock", "Low Stock", "Out of Stock"];
-  const warehouseOptions = [
-    "All",
-    "Location A",
-    "Location B",
-    "Location C",
-    "Location D",
-    "Location F",
-    "Location G",
-    "Location H",
-    "Location T",
-    "Multiple 22"
-  ];
+  /* FILTER OPTIONS FROM BACKEND */
+  const [categories, setCategories] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
 
+  /* FILTER STATES */
   const [filterCategory, setFilterCategory] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
   const [filterWarehouse, setFilterWarehouse] = useState("All");
   const [openDropdown, setOpenDropdown] = useState(null);
 
+  /* PAGINATION */
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 5;
+
+  /* HELPERS */
   const toggleDropdown = (name) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
 
-  const getStatus = (qty) => {
-    if (qty === 0) return "Out of Stock";
-    if (qty < 10) return "Low Stock";
-    return "In Stock";
-  };
+  const getStockStatus = (qty, minStock, maxStock) => {
+  if (qty === 0) return "Out of Stock";
+  if (qty <= minStock) return "Low Stock";
+  if (qty > minStock && qty <= maxStock) return "In Stock";
+  return "Over Stock";
+};
 
+  /* FETCH PRODUCTS (FILTERED + PAGINATED) */
   useEffect(() => {
     const fetchProducts = async () => {
+      setLoading(true);
       try {
-        const res = await getProducts();
-        setProducts(res.data);
+        const res = await getProducts({
+          search,
+          category: filterCategory,
+          status: filterStatus,
+          warehouse: filterWarehouse,
+          page: currentPage,
+          limit: itemsPerPage,
+        });
+
+        setProducts(res.data.products);
+        setTotalPages(res.data.totalPages);
+        setCategories(res.data.categories || []);
+        setWarehouses(res.data.warehouses || []);
       } catch (err) {
-        console.error("Error fetching products:", err);
+        console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchProducts();
-  }, []);
+  }, [
+    search,
+    filterCategory,
+    filterStatus,
+    filterWarehouse,
+    currentPage,
+  ]);
 
-  const filteredProducts = products.filter((p) => {
-    return (
-      (filterCategory === "All" || p.Category === filterCategory) &&
-      (filterStatus === "All" || getStatus(p.QTY) === filterStatus) &&
-      (filterWarehouse === "All" || p.Warehouse.includes(filterWarehouse))
-    );
-  });
+  /* RESET PAGE WHEN FILTER CHANGES */
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterCategory, filterStatus, filterWarehouse]);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-
-  const currentProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
+  /* PAGINATION NUMBERS */
   const getPaginationNumbers = () => {
     const delta = 2;
     const range = [];
     const rangeWithDots = [];
-    let l;
+    let last;
 
     for (let i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - delta &&
+          i <= currentPage + delta)
+      ) {
         range.push(i);
       }
     }
 
     for (let i of range) {
-      if (l) {
-        if (i - l === 2) {
-          rangeWithDots.push(l + 1);
-        } else if (i - l !== 1) {
-          rangeWithDots.push("...");
-        }
+      if (last) {
+        if (i - last === 2) rangeWithDots.push(last + 1);
+        else if (i - last !== 1) rangeWithDots.push("...");
       }
       rangeWithDots.push(i);
-      l = i;
+      last = i;
     }
+
     return rangeWithDots;
   };
 
-  const getButtonText = (filter, defaultText) => {
-    return filter === "All" ? defaultText : filter;
-  };
+  const getButtonText = (value, label) =>
+    value === "All" ? label : value;
 
   return (
     <div className={styles.dashboard}>
+      {/* HEADER */}
       <div className={styles.header}>
         <h2>Dashboard</h2>
+
         <div className={styles.actions}>
-          {/* Category Filter */}
+          {/* CATEGORY */}
           <div className={styles.dropdownWrapper}>
             <button onClick={() => toggleDropdown("category")}>
-              {getButtonText(filterCategory, "Category")} <FontAwesomeIcon icon={faAngleDown} />
+              {getButtonText(filterCategory, "Category")}
+              <FontAwesomeIcon icon={faAngleDown} />
             </button>
             {openDropdown === "category" && (
               <ul className={styles.dropdown}>
-                {categoryOptions.map((cat) => (
-                  <li key={cat} onClick={() => { setFilterCategory(cat); setOpenDropdown(null); }}>
+                <li onClick={() => setFilterCategory("All")}>
+                  All
+                </li>
+                {categories.map((cat) => (
+                  <li
+                    key={cat}
+                    onClick={() => setFilterCategory(cat)}
+                  >
                     {cat}
                   </li>
                 ))}
@@ -130,31 +142,49 @@ const DashboardHome = () => {
             )}
           </div>
 
-          {/* Status Filter */}
+          {/* STATUS */}
           <div className={styles.dropdownWrapper}>
             <button onClick={() => toggleDropdown("status")}>
-              {getButtonText(filterStatus, "Status")} <FontAwesomeIcon icon={faAngleDown} />
+              {getButtonText(filterStatus, "Status")}
+              <FontAwesomeIcon icon={faAngleDown} />
             </button>
             {openDropdown === "status" && (
               <ul className={styles.dropdown}>
-                {statusOptions.map((status) => (
-                  <li key={status} onClick={() => { setFilterStatus(status); setOpenDropdown(null); }}>
-                    {status}
+                {[
+                  "All",
+                  "In Stock",
+                  "Low Stock",
+                  "Out of Stock",
+                ].map((st) => (
+                  <li
+                    key={st}
+                    onClick={() => setFilterStatus(st)}
+                  >
+                    {st}
                   </li>
                 ))}
               </ul>
             )}
           </div>
 
-          {/* Warehouse Filter */}
+          {/* WAREHOUSE */}
           <div className={styles.dropdownWrapper}>
             <button onClick={() => toggleDropdown("warehouse")}>
-              {getButtonText(filterWarehouse, "Warehouse")} <FontAwesomeIcon icon={faAngleDown} />
+              {getButtonText(filterWarehouse, "Warehouse")}
+              <FontAwesomeIcon icon={faAngleDown} />
             </button>
             {openDropdown === "warehouse" && (
               <ul className={styles.dropdown}>
-                {warehouseOptions.map((wh) => (
-                  <li key={wh} onClick={() => { setFilterWarehouse(wh); setOpenDropdown(null); }}>
+                <li
+                  onClick={() => setFilterWarehouse("All")}
+                >
+                  All
+                </li>
+                {warehouses.map((wh) => (
+                  <li
+                    key={wh}
+                    onClick={() => setFilterWarehouse(wh)}
+                  >
                     {wh}
                   </li>
                 ))}
@@ -164,7 +194,7 @@ const DashboardHome = () => {
         </div>
       </div>
 
-      {/* Table */}
+      {/* TABLE */}
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -176,32 +206,56 @@ const DashboardHome = () => {
               <th>QTY</th>
               <th>Warehouse</th>
               <th>Price</th>
+              <th>Stock</th>
               <th>Last Modified</th>
             </tr>
           </thead>
+
           <tbody>
             {loading ? (
-              <tr><td colSpan="8">Loading...</td></tr>
-            ) : currentProducts.length === 0 ? (
-              <tr><td colSpan="8">No products found</td></tr>
+              <tr>
+                <td colSpan="9">Loading...</td>
+              </tr>
+            ) : products.length === 0 ? (
+              <tr>
+                <td colSpan="9">No products found</td>
+              </tr>
             ) : (
-              currentProducts.map((p) => (
+              products.map((p) => (
                 <tr key={p._id}>
                   <td>{p.SKU}</td>
-                  <td><img src={`http://localhost:3000${p.Image}`} alt={p.Title} /></td>
+                  <td>
+                    <img
+                      src={`http://localhost:3000${p.Image}`}
+                      alt={p.Title}
+                    />
+                  </td>
                   <td>{p.Title}</td>
                   <td>{p.Category}</td>
                   <td>{p.QTY}</td>
                   <td>{p.Warehouse}</td>
                   <td>₹ {p.Price}</td>
                   <td>
-  {new Date(p["Last Modified"]).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  })}
+  <span
+    className={`${styles.stock} ${
+      styles[
+        getStockStatus(
+          p.QTY,
+          p.minStock,
+          p.maxStock
+        ).replace(/\s/g, "")
+      ]
+    }`}
+  >
+    {getStockStatus(p.QTY, p.minStock, p.maxStock)}
+  </span>
 </td>
 
+                  <td>
+                    {new Date(
+                      p["LastModified"]
+                    ).toLocaleDateString("en-GB")}
+                  </td>
                 </tr>
               ))
             )}
@@ -209,26 +263,46 @@ const DashboardHome = () => {
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* PAGINATION */}
       {totalPages > 1 && (
         <div className={styles.pagination}>
-          <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} className={styles.arrowBtn}>
+          <button
+            className={styles.arrowBtn}
+            onClick={() =>
+              setCurrentPage((p) => Math.max(p - 1, 1))
+            }
+          >
             &lt;
           </button>
+
           {getPaginationNumbers().map((num, idx) =>
             num === "..." ? (
-              <span key={idx} className={styles.dots}>...</span>
+              <span key={idx} className={styles.dots}>
+                ...
+              </span>
             ) : (
               <button
                 key={idx}
-                className={`${styles.pageBtn} ${currentPage === num ? styles.activePage : ""}`}
+                className={`${styles.pageBtn} ${
+                  currentPage === num
+                    ? styles.activePage
+                    : ""
+                }`}
                 onClick={() => setCurrentPage(num)}
               >
                 {num}
               </button>
             )
           )}
-          <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} className={styles.arrowBtn}>
+
+          <button
+            className={styles.arrowBtn}
+            onClick={() =>
+              setCurrentPage((p) =>
+                Math.min(p + 1, totalPages)
+              )
+            }
+          >
             &gt;
           </button>
         </div>

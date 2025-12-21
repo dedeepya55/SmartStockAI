@@ -5,7 +5,15 @@
   display: flex;
   flex-direction: column;
   padding: 18px;
+
+  position: sticky;
+  top: 65px;                         /* ✅ same as topbar height */
+  height: calc(100vh - 101px);        /* ✅ remaining space */
+  flex-shrink: 0;
 }
+
+
+
 
 /* REMOVE DOTS */
 .menu {
@@ -16,7 +24,8 @@
 
 /* Bottom items stay at bottom */
 .bottomMenu {
-  margin-top: auto;
+  padding-top: 140px;
+  /* margin-top: auto; */
 }
 
 /* Menu item – SAME AS BEFORE */
